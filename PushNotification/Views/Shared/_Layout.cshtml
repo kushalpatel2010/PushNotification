@@ -1,0 +1,167 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>@ViewBag.Title - My ASP.NET MVC Application</title>
+    <link href="~/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+    <meta name="viewport" content="width=device-width" />
+    @Styles.Render("~/Content/css")
+    @Scripts.Render("~/bundles/modernizr")
+</head>
+<body>
+    <header>
+        <div class="content-wrapper">
+            <div class="float-left">
+                <p class="site-title">@Html.ActionLink("your logo here", "Index", "Home")</p>
+            </div>
+            <div class="float-right">
+                <nav>
+                    <ul id="menu">
+                        <li>@Html.ActionLink("Home", "Index", "Home")</li>
+                        <li>@Html.ActionLink("About", "About", "Home")</li>
+                        <li>@Html.ActionLink("Contact", "Contact", "Home")</li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </header>
+    <div id="body">
+        <span class="noti glyphicon glyphicon-bell MyClick">ds<span class="count">&nbsp;</span></span>
+        <div class="noti-content">
+            <div class="noti-top-arrow">
+            </div>
+            
+        </div>
+        <ul id="notiContent"></ul>
+        <section class="content-wrapper main-content clear-fix">
+            @RenderBody()
+        </section>
+    </div>
+    <footer>
+        <div class="content-wrapper">
+            <div class="float-left">
+                <p>&copy; @DateTime.Now.Year - My ASP.NET MVC Application</p>
+            </div>
+        </div>
+    </footer>
+
+    @Scripts.Render("~/bundles/jquery")
+    @RenderSection("scripts", required: false)
+    <script src="~/Scripts/jquery.signalR-2.2.1.min.js"></script>
+    <script src="~/signalr/hubs"></script>
+    <style>
+        .noti-content {
+            position:fixed;
+            right:100px;
+            background:#b200ff;
+            border-radius:4px;
+            top:47px;
+            width:250px;
+            display:none;
+            border:1px solid #ff6a00;
+        }
+        ul#notiContent {
+            max-height:200px;
+            overflow:auto;
+            padding:0px;
+            margin:0px;
+            padding-left:20px;
+        }
+            ul#notiContent li {
+                margin:3px;
+                padding:6px;
+                background:#fff;
+            }
+        .noti-top-arrow {
+            border-color:transparent;
+            border-bottom-color:#ffd800;
+            border-style:dashed dashed solid;
+            border-width:0 8.5px 8.5px;
+            position:absolute;
+            right:32px;
+            top:-8px;
+        }
+        span.noti {
+            color:#FF2323;
+            margin:15px;
+            position:fixed;
+            right:100px;
+            font-size:18px;
+            cursor:pointer;
+        }
+        span.count {
+        position:relative;
+        top:-3px;
+        }
+
+    </style>
+
+    <script type="text/javascript">
+        $(function () {
+            updateNotification();
+           
+            $(".MyClick").click(function (e) {
+                e.stopPropagation();
+                $(".noti-content").show();
+                var count = 0;
+                count = parseInt($('span-count').html()) || 0;
+                if (count > 0) {
+                    updateNotification();
+                }
+                $('span-count', this).html('&nbsp;');
+            });
+
+            $('html').click(function () {
+                $('.noti-content').hide();
+            });
+
+            function updateNotification() {
+                alert("updte");
+                $('.noti-content').empty();
+                $('.noti-content').append("<li>Loading...</li>");
+
+                $.ajax({
+                    type: 'GET',
+                    url: 'home/GetNotificationContacts',
+                    success: function (response) {
+                        debugger;
+                        $('#notiContent').empty();
+                        if (response.length == 0) {
+                            $('#notiContent').append("<li>No data available</li>");
+                        }
+
+                        $.each(response, function (index, value) {
+                            $("#notiContent").append('<li>New Contact : ' + value.ContactName + ' (' + value.ContactNo + ') added</li>');
+                        });
+                        alert($("#notiContent").text());
+                    },
+                    error: function (error) {
+                        console.log(error);
+                    }
+                });
+            }
+            function updateNotificationCount() {
+                var count = 0;
+                count = parseInt($('span.count').html()) || 0;
+                count++;
+                $('span.count').html(count);
+
+            }
+
+            var notificationHub = $.connection.notificationHub;
+            $.connection.hub.start().done(function () {
+                console.log("notification Hub Started");
+            });
+
+            notificationHub.client.notify = function (message)
+            {
+                alert("csed " + message);
+                if (message && message.toLowerCase() == "added")
+                {
+                    updateNotificationCount();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
